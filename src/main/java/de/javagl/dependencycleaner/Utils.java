@@ -27,7 +27,10 @@
 package de.javagl.dependencycleaner;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Enumeration;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
@@ -45,10 +48,21 @@ class Utils
     {
         try (JarFile jarFile = new JarFile(path.toFile()))
         {
+            // Try to read a single byte from each entry. This may cause the
+            // java.util.zip.ZipException: invalid LOC header (bad signature)
+            // that indicates that the JAR is broken.
+            Enumeration<JarEntry> entries = jarFile.entries();
+            while (entries.hasMoreElements())
+            {
+                JarEntry entry = entries.nextElement();
+                InputStream inputStream = jarFile.getInputStream(entry);
+                inputStream.read();
+            }
             return true;
         }
         catch (IOException e)
         {
+            //e.printStackTrace();
             return false;
         }
     }
